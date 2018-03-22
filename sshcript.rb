@@ -32,6 +32,7 @@ class SSHTask
     run_cmds_on_hosts
   end
 
+  # loop through each host and run each command
   def run_cmds_on_hosts
     @@hosts.each do |host|
       @@cmds.each do |cmd|
@@ -41,6 +42,7 @@ class SSHTask
     end
   end
 
+  # read each line from the host file path and add it to @@hosts
   def parse_hosts
     File.open(@@host_path, 'r') do |f|
       f.each_line do |line|
@@ -49,6 +51,7 @@ class SSHTask
     end
   end
 
+  # read each line from the cmds file path and add it to @@cmds
   def parse_cmds
     File.open(@@cmds_path, 'r') do |f|
       f.each_line do |line|
@@ -57,6 +60,7 @@ class SSHTask
     end
   end
 
+  # connect to host with username, password, and execute cmd (puts stdout)
   def run_task(host, username, password, cmd)
     Net::SSH.start(host, username, :password => password) do |ssh|
       output = ssh.exec!(cmd)
