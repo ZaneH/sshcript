@@ -10,21 +10,11 @@ class SSHTask
   @@hosts = []
   @@cmds  = []
 
-  def initialize
-    puts '-- [ sshcript'
-
-    print '-> File path of hosts: '
-    @@host_path = gets.chomp
-
-    print '-> File path of commands to execute: '
-    @@cmds_path = gets.chomp
-
-    print '-> Username for hosts: '
-    @@username = gets.chomp
-
-    print '-> Password for hosts (hidden): '
-    @@password = STDIN.noecho(&:gets).chomp
-    puts ''
+  def initialize(host_path, cmds_path, username, password)
+    @@host_path = host_path
+    @@cmds_path = cmds_path
+    @@username  = username
+    @@password  = password
 
     parse_hosts
     parse_cmds
@@ -62,11 +52,36 @@ class SSHTask
 
   # connect to host with username, password, and execute cmd (puts stdout)
   def run_task(host, username, password, cmd)
-    Net::SSH.start(host, username, :password => password) do |ssh|
-      output = ssh.exec!(cmd)
-      puts output
+    begin
+      Net::SSH.start(host, username, :password => password) do |ssh|
+        puts "-> Executing: [ #{cmd} ]"
+        output = ssh.exec!(cmd)
+        puts ">> #{output}"
+      end
+    rescue Errno::EHOSTUNREACH
+      puts "[-] #{host} is unreachable."
+    rescue Errno::ECONNREFUSED
+      puts "[-] #{host} refused the connection."
+    rescue Net::SSH::AuthenticationFailed
+      puts "[-] Authentication failure."
+    rescue Timeout::Error
+      puts "[-] Connection timed out."
     end
   end
 end
 
-s = SSHTask.new
+puts '-- [ sshcript'
+
+print '-> File path of hosts: '
+host_path = gets.chomp
+
+print '-> File path of commands to execute: '
+cmds_path = gets.chomp
+
+print '-> Username for hosts: '
+username = gets.chomp
+
+print '-> Password for hosts (hidden): '
+password = STDIN.noecho(&:gets).chomp
+puts ''
+s = SSHTask.new(host_path, cmds_path, username, password)
